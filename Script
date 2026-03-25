@@ -473,23 +473,6 @@ local function doHome()
 	setLog("Home (SafeZone).")
 	return true
 end
-	
-	local targetCF = CFrame.new(targetPosition)
-	safeTp(targetCF)
-	task.wait(0.1)
-	freezeCharacter()
-	setLog("Home (SafeZone).")
-	return true
-end
-	waitChar()
-	local targetCF = CFrame.new(sz.Position.X, sz.Position.Y + sz.Size.Y / 2 + 1, sz.Position.Z)
-	safeTp(targetCF)
-	task.wait(0.1)
-	freezeCharacter()
-	setLog("Home (SafeZone).")
-	return true
-end
-
 --// COLLECT — свой плот, радиус 800
 local function doCollect()
 	if busy then return false end
