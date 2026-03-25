@@ -456,7 +456,6 @@ local function doHome()
 
 	local targetPosition
 	
-	-- If CyberTech manual safezone
 	if typeof(sz) == "table" then
 		targetPosition = sz.Position + Vector3.new(0, 3, 0)
 	else
@@ -466,6 +465,14 @@ local function doHome()
 			sz.Position.Z
 		)
 	end
+	
+	local targetCF = CFrame.new(targetPosition)
+	safeTp(targetCF)
+	task.wait(0.1)
+	freezeCharacter()
+	setLog("Home (SafeZone).")
+	return true
+end
 	
 	local targetCF = CFrame.new(targetPosition)
 	safeTp(targetCF)
