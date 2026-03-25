@@ -1,15 +1,12 @@
---// SERVICES
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
---// CLEAN OLD GUI
 local oldGui = playerGui:FindFirstChild("LootControllerGui")
 if oldGui then oldGui:Destroy() end
 
---// VARIABLES
 local CURRENT_PLOT = nil
 local CURRENT_ISLAND = nil
 local TELEPORT_DELAY = 0.08
@@ -34,7 +31,6 @@ local lootFolder = workspace:WaitForChild("ActiveLoot")
 local busy = false
 local bindListening = nil
 
---// CHARACTER UTILITIES
 local function freezeCharacter()
 	local ch = player.Character
 	if not ch then return end
@@ -87,7 +83,6 @@ local function hasHeldItem()
 	return false
 end
 
---// DETECT PLAYER PLOT
 local function detectPlayerPlot()
 	local islands = workspace:FindFirstChild("Islands")
 	if not islands then return end
@@ -123,7 +118,6 @@ task.spawn(function()
 	end
 end)
 
---// UNIVERSAL ZONE FINDER
 local function findZone(zoneType)
 	local islands = workspace:FindFirstChild("Islands")
 	if not islands then return nil end
@@ -144,7 +138,6 @@ local function findZone(zoneType)
 		return nil
 	end
 
-	-- 1️⃣ CURRENT island + plot
 	local island = islands:FindFirstChild(CURRENT_ISLAND)
 	if island then
 		local plots = island:FindFirstChild("Plots")
@@ -157,7 +150,6 @@ local function findZone(zoneType)
 		end
 	end
 
-	-- 2️⃣ Owned plot anywhere
 	for _, island in ipairs(islands:GetChildren()) do
 		local plots = island:FindFirstChild("Plots")
 		if not plots then continue end
@@ -173,7 +165,6 @@ local function findZone(zoneType)
 		end
 	end
 
-	-- 3️⃣ Any matching plot name fallback
 	for _, island in ipairs(islands:GetChildren()) do
 		local plots = island:FindFirstChild("Plots")
 		if not plots then continue end
@@ -197,6 +188,3 @@ end
 local function getSplitZone()
 	return findZone("SplitZone")
 end
-
---// [THE REST OF YOUR ORIGINAL SCRIPT REMAINS UNCHANGED]
--- This includes all GUI creation, buttons, auto-farm loops, collect/sell/split functions, binds, etc.
