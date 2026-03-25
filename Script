@@ -1,8 +1,11 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+if not RunService:IsClient() then return end
 
 local oldGui = playerGui:FindFirstChild("LootControllerGui")
 if oldGui then oldGui:Destroy() end
@@ -37,9 +40,9 @@ local function freezeCharacter()
 	local hrp = ch:FindFirstChild("HumanoidRootPart")
 	local hum = ch:FindFirstChild("Humanoid")
 	if hrp then
-		hrp.Velocity = Vector3.new(0, 0, 0)
-		hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-		hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+		hrp.Velocity = Vector3.new(0,0,0)
+		hrp.AssemblyLinearVelocity = Vector3.new(0,0,0)
+		hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
 	end
 	if hum then hum:ChangeState(Enum.HumanoidStateType.Running) end
 end
@@ -106,18 +109,6 @@ end
 
 detectPlayerPlot()
 
-task.spawn(function()
-	while true do
-		task.wait(5)
-		detectPlayerPlot()
-		pcall(function()
-			if islandDropdown then islandDropdown.Text = CURRENT_ISLAND end
-			if plotDropdown then plotDropdown.Text = CURRENT_PLOT end
-			if statusLabel then statusLabel.Text = "🌍 " .. tostring(CURRENT_ISLAND) .. " / " .. tostring(CURRENT_PLOT) end
-		end)
-	end
-end)
-
 local function findZone(zoneType)
 	local islands = workspace:FindFirstChild("Islands")
 	if not islands then return nil end
@@ -165,19 +156,6 @@ local function findZone(zoneType)
 		end
 	end
 
-	for _, island in ipairs(islands:GetChildren()) do
-		local plots = island:FindFirstChild("Plots")
-		if not plots then continue end
-		local plot = plots:FindFirstChild(CURRENT_PLOT)
-		if plot then
-			local zone = findInPlot(plot)
-			if zone then
-				CURRENT_ISLAND = island.Name
-				return zone
-			end
-		end
-	end
-
 	return nil
 end
 
@@ -188,3 +166,83 @@ end
 local function getSplitZone()
 	return findZone("SplitZone")
 end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LootControllerGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 245, 0, 405)
+frame.Position = UDim2.new(0.1, 0, 0.1, 0)
+frame.BackgroundColor3 = Color3.fromRGB(18,18,28)
+frame.Active = true
+frame.Draggable = true
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,8)
+
+statusLabel = Instance.new("TextLabel", frame)
+statusLabel.Size = UDim2.new(1, -14, 0, 20)
+statusLabel.Position = UDim2.new(0, 7, 0, 7)
+statusLabel.Text = "🌍 "..tostring(CURRENT_ISLAND).." / "..tostring(CURRENT_PLOT)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.fromRGB(0,255,120)
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 14
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local function makeBtn(text,pos)
+	local btn = Instance.new("TextButton",frame)
+	btn.Size = UDim2.new(0,110,0,30)
+	btn.Position = pos
+	btn.Text = text
+	btn.BackgroundColor3 = Color3.fromRGB(0,120,60)
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.BorderSizePixel = 0
+	Instance.new("UICorner",btn).CornerRadius = UDim.new(0,5)
+	return btn
+end
+
+local collectBtn = makeBtn("🧲 Collect",UDim2.new(0,8,0,40))
+local homeBtn = makeBtn("🏠 Home",UDim2.new(0,127,0,40))
+local splitBtn = makeBtn("🪓 Split",UDim2.new(0,8,0,80))
+local sellBtn = makeBtn("💰 Sell",UDim2.new(0,127,0,80))
+
+local function doHome()
+	local sz = getSafeZone()
+	if not sz then return end
+	waitChar()
+	safeTp(sz.CFrame + Vector3.new(0,3,0))
+end
+
+local function doCollect()
+	for _,m in ipairs(lootFolder:GetChildren()) do
+		if m:IsA("Model") then
+			local ok,pv = pcall(function() return m:GetPivot() end)
+			if ok then
+				safeTp(pv + Vector3.new(0,1,0))
+				task.wait(TELEPORT_DELAY)
+			end
+		end
+	end
+end
+
+local function doSplit()
+	local sz = getSplitZone()
+	if not sz then return end
+	waitChar()
+	safeTp(sz.CFrame + Vector3.new(0,3,0))
+	ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SplitRequest"):FireServer(1,true)
+end
+
+local function doSell()
+	ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("SellRequest"):FireServer({Mode="SellAll"})
+end
+
+collectBtn.MouseButton1Click:Connect(doCollect)
+homeBtn.MouseButton1Click:Connect(doHome)
+splitBtn.MouseButton1Click:Connect(doSplit)
+sellBtn.MouseButton1Click:Connect(doSell)
+end)
